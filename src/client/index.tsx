@@ -11,6 +11,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-model-selection/client'
 import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import { selectPlanReview } from '../plan-review.ts'
 import { ComposerPicker, type ComposerPickerProps } from './ComposerPicker.tsx'
+import type { PickerInteractionOperations } from './popup-dismissal.ts'
 import { CONTINUE_IN_DSH_SLOT, ContinueInDshAdapter, type ContinueInDshFace } from './ContinueInDshAdapter.tsx'
 import { PlanReviewCard } from './PlanReviewCard.tsx'
 import { en, zh, type PickerKey } from './locales.ts'
@@ -24,6 +25,15 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 const NS = 'composer-picker'
 const MODEL_PRIORITY = -1
 const PLAN_REVIEW_PRIORITY = -5
+
+function interactionOperationsFrom(ctx: ClientContext): PickerInteractionOperations | undefined {
+  const holder = ctx as ClientContext & { get?(name: string, strict?: boolean): unknown; interactionOperations?: unknown }
+  let value: unknown
+  try { value = holder.get?.('interactionOperations', false) ?? holder.interactionOperations } catch { return undefined }
+  if (value === null || typeof value !== 'object') return undefined
+  const candidate = value as Partial<PickerInteractionOperations>
+  return typeof candidate.registerSurface === 'function' ? candidate as PickerInteractionOperations : undefined
+}
 
 export const name = 'dsh-composer-picker-client'
 export const inject = ['slots', 'locale', 'sessions']
@@ -39,6 +49,9 @@ function ModelSeat(
       load={props.load}
       select={props.select}
       t={props.t}
+      {...props.resolveInteractionOperations === undefined
+        ? {}
+        : { resolveInteractionOperations: props.resolveInteractionOperations }}
       {...props.useProjection === undefined ? {} : { useProjection: props.useProjection }}
     />
   )
@@ -50,17 +63,19 @@ export function apply(ctx: ClientContext): void {
   ctx.inject(['slots', 'modelDirectories', 'sessions'], (scope: ClientContext) => {
     const models = scope.modelDirectories
     const sessions = scope.sessions
+    const resolveInteractionOperations = (): PickerInteractionOperations | undefined => interactionOperationsFrom(scope)
 
     scope.slots.inject('conversation.input.model', () => scope.slots.register({
       name: 'conversation.input.model',
       locale: NS,
       priority: MODEL_PRIORITY,
-      inject: (sessionId): Pick<ComposerPickerProps, 'available' | 'directory' | 'load' | 'select'> => {
+      inject: (sessionId): Pick<ComposerPickerProps, 'available' | 'directory' | 'load' | 'select' | 'resolveInteractionOperations'> => {
         const directory = models.directoryFor(sessionId)
         const available = sessions.subagentAddress(sessionId) === undefined
         return {
           available,
           directory: directory.store,
+          resolveInteractionOperations,
           load: () => {
             if (available) directory.load().catch(() => { /* surfaced on the store */ })
           },
@@ -92,6 +107,7 @@ export function apply(ctx: ClientContext): void {
             : Promise.resolve(false)}
           t={props.t}
           useProjection={props.useProjection}
+          resolveInteractionOperations={resolveInteractionOperations}
         />
       )
     }
@@ -105,6 +121,7 @@ export function apply(ctx: ClientContext): void {
         return {
           available,
           directory: directory.store,
+          resolveInteractionOperations,
           load: () => {
             if (available) directory.load().catch(() => { /* surfaced on the store */ })
           },

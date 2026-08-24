@@ -87,10 +87,10 @@ export function parsePickerId(id: string): ParsedPickerId {
   }
 }
 
-/** Human label for a context tier: 1M, 272K, or 标准 · 272K. */
+/** Human label for a context tier: 1M, 272K, or 标准 when its window is unknown. */
 export function contextTierLabel(tier: string | null, tokens?: number): string {
   if (tier === null) {
-    return tokens === undefined ? '标准' : `标准 · ${formatWindow(tokens)}`
+    return tokens === undefined ? '标准' : formatWindow(tokens)
   }
   const match = /^(\d+)(k|m)$/iu.exec(tier)
   if (match !== null) return `${match[1]}${match[2]!.toUpperCase()}`

@@ -5,6 +5,7 @@ import type { ModelSelection } from '@deepseek-ai/dsh-api-remotes/client'
 import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import { commitDshSelection } from '../continue-in-dsh.ts'
 import { ComposerPicker, type PickerDirectoryStore } from './ComposerPicker.tsx'
+import type { PickerInteractionOperations } from './popup-dismissal.ts'
 
 export const CONTINUE_IN_DSH_SLOT = 'external-agents.plan-review.continue-in-dsh' as const
 
@@ -39,6 +40,7 @@ export interface ContinueInDshFace {
   directory: PickerDirectoryStore
   load: () => void
   select: (selection: ModelSelection) => Promise<boolean>
+  resolveInteractionOperations?: () => PickerInteractionOperations | undefined
 }
 
 type Props = PropsRuntime<typeof CONTINUE_IN_DSH_SLOT>
@@ -60,6 +62,9 @@ export function ContinueInDshAdapter(props: Props) {
     select={props.select}
     t={props.t}
     useProjection={props.useProjection}
+    {...props.resolveInteractionOperations === undefined
+      ? {}
+      : { resolveInteractionOperations: props.resolveInteractionOperations }}
     {...draft === undefined ? {} : { draft }}
     onDraftChange={selection => { setDraft(selection); props.selectTarget('dsh') }}
     externalTargets={props.workers}

@@ -53,7 +53,7 @@ export interface ModelFamily {
 }
 /** Peel Fast and `-<n>k` / `-<n>m` in either order. Product names like `-max` stay. */
 export declare function parsePickerId(id: string): ParsedPickerId;
-/** Human label for a context tier: 1M, 272K, or 标准 · 272K. */
+/** Human label for a context tier: 1M, 272K, or 标准 when its window is unknown. */
 export declare function contextTierLabel(tier: string | null, tokens?: number): string;
 /** Compact token window for trigger / context-cell copy. */
 export declare function formatWindow(tokens: number): string;

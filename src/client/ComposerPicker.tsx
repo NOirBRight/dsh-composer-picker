@@ -3,7 +3,7 @@
  */
 
 import {
-  useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore,
+  useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore,
   type CSSProperties, type KeyboardEvent,
 } from 'react'
 import { createPortal } from 'react-dom'
@@ -30,6 +30,7 @@ import {
   thinkingSiblings,
 } from '../family.ts'
 import type { PickerKey } from './locales.ts'
+import { installPickerDismissal, type PickerInteractionOperations } from './popup-dismissal.ts'
 import css from './ComposerPicker.module.css'
 
 export interface PickerDirectorySnapshot {
@@ -67,6 +68,7 @@ export interface ComposerPickerProps {
   externalTargetsLabel?: string
   externalSelection?: string
   onExternalTargetChange?: (id: string | undefined) => void
+  resolveInteractionOperations?: () => PickerInteractionOperations | undefined
 }
 
 type Pane = 'root' | 'model' | 'effort' | 'context' | 'fast' | 'thinking'
@@ -141,6 +143,7 @@ export function ModelPaneHeader({
 export function ComposerPicker({
   locked, available, directory, load, select, t, useProjection, draft, onDraftChange, embedded,
   externalTargets = [], externalTargetsLabel = 'External Agents', externalSelection, onExternalTargetChange,
+  resolveInteractionOperations,
 }: ComposerPickerProps) {
   const state = useSyncExternalStore(fn => directory.subscribe(fn), () => directory.getSnapshot())
   const pressureWindow = asContextWindow(useProjection?.('contextPressure'))
@@ -188,6 +191,14 @@ export function ComposerPicker({
   const sections = useMemo(() => sectionFamilies(visibleFamilies), [visibleFamilies])
   const busy = state.status === 'selecting'
 
+  const close = useCallback((restoreFocus = false): void => {
+    setOpen(false)
+    setPane('root')
+    setSearching(false)
+    setQuery('')
+    if (restoreFocus) queueMicrotask(() => { triggerRef.current?.focus() })
+  }, [])
+
   const reload = (): void => {
     lastActionRef.current = 'load'
     load()
@@ -224,24 +235,18 @@ export function ComposerPicker({
 
   useEffect(() => {
     if (!open) return
-    const onPointer = (event: MouseEvent): void => {
-      const target = event.target as Node
-      if (triggerRef.current?.contains(target) || menuRef.current?.contains(target)) return
-      setOpen(false)
-    }
-    document.addEventListener('mousedown', onPointer)
-    return () => { document.removeEventListener('mousedown', onPointer) }
-  }, [open])
+    const interaction = resolveInteractionOperations?.()
+    return installPickerDismissal({
+      documentTarget: document,
+      surfaceId: `composer-model-picker-${id}`,
+      ...(interaction === undefined ? {} : { interaction }),
+      trigger: () => triggerRef.current,
+      popup: () => menuRef.current,
+      dismiss: close,
+    })
+  }, [close, id, open, resolveInteractionOperations])
 
   if (!available && externalTargets.length === 0) return null
-
-  const close = (restoreFocus = false): void => {
-    setOpen(false)
-    setPane('root')
-    setSearching(false)
-    setQuery('')
-    if (restoreFocus) queueMicrotask(() => { triggerRef.current?.focus() })
-  }
 
   const show = (): void => {
     // In Plan Review this is the execution-target control, so open the combined
@@ -357,7 +362,7 @@ export function ComposerPicker({
       aria-busy={state.status === 'loading' || busy}
     >
       {paneHeader}
-
+      <div className={css.list}>
       {pane === 'root' && (
         <>
           <button type="button" role="menuitem" className={css.cell} onClick={() => { setPane('model'); setSearching(false); setQuery('') }}>
@@ -569,6 +574,7 @@ export function ComposerPicker({
           )
         })
       )}
+      </div>
     </div>
   ) : null
 

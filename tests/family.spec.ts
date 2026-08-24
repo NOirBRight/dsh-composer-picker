@@ -136,8 +136,8 @@ describe('groupFamilies', () => {
     const sol = families.find(family => family.base === 'gpt-5.6-sol')!
     expect(familyHasFast(sol)).toBe(true)
     expect(familyHasContextChoices(sol)).toBe(true)
-    expect(contextTiers(sol).map(row => row.label)).toEqual(['标准 · 272K', '1M', '272K'])
-    expect(contextTiers(sol, 272_000).map(row => row.label)).toEqual(['标准 · 272K', '1M', '272K'])
+    expect(contextTiers(sol).map(row => row.label)).toEqual(['272K', '1M', '272K'])
+    expect(contextTiers(sol, 272_000).map(row => row.label)).toEqual(['272K', '1M', '272K'])
     const kimi = families.find(family => family.base === 'kimi-k3-max')!
     expect(familyHasFast(kimi)).toBe(false)
     expect(familyHasContextChoices(kimi)).toBe(false)

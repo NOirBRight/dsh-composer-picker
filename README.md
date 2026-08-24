@@ -16,9 +16,9 @@ Same model, multiple catalog rows. The picker peels:
 
 Product names such as `kimi-k3-max` are not peeled. Provider plugins (codex / cursor / ollama) peel the suffix on the wire and set `contextWindow` so DSH compactes earlier. Grok catalogs can use the same ids; this picker still groups them.
 
-Panel rows: **Model** (family + local search) / **Effort** (current row `reasoning.efforts`) / **Context** (sibling tiers; base is 标准) / **Fast** (only when a `-fast` sibling exists) / **Thinking** (only when a real on/off sibling exists). Submit `{ provider, model, reasoningEffort }` through the official `session.selectModel` directory.
+Panel rows: **Model** (family + local search) / **Effort** (current row `reasoning.efforts`) / **Context** (sibling tiers; the base shows its token window when known, otherwise Standard) / **Fast** (only when a `-fast` sibling exists) / **Thinking** (only when a real on/off sibling exists). Submit `{ provider, model, reasoningEffort }` through the official `session.selectModel` directory.
 
-Narrow screens open a bottom sheet. Wide screens pin the menu to the trigger. The menu is portaled above the rc.2 Plan chip.
+Narrow screens open a bottom sheet. Wide screens pin the menu to the trigger. The portaled menu closes on capture-phase outside pointer input and registers as a popup with DSH Mobile Interaction Operations when that optional service is present.
 
 ## Plan review
 

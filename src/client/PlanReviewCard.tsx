@@ -10,6 +10,7 @@ import { Button, IconEditOutline16, MarkdownText } from '@deepseek-ai/dsh-client
 import { approvePlanReview, planReviewOf } from '../plan-review.ts'
 import { findFamily, findMember, groupFamilies } from '../family.ts'
 import { ComposerPicker, type PickerDirectoryStore } from './ComposerPicker.tsx'
+import type { PickerInteractionOperations } from './popup-dismissal.ts'
 import type { PickerKey } from './locales.ts'
 import css from './PlanReviewCard.module.css'
 
@@ -23,6 +24,7 @@ export interface PlanReviewCardProps {
   t: (key: PickerKey, params?: Record<string, string>) => string
   useProjection: (key: string) => unknown
   locked?: boolean
+  resolveInteractionOperations?: () => PickerInteractionOperations | undefined
 }
 
 async function respondApprove(wait: QuestionWait, id: string, label: string): Promise<void> {
@@ -42,7 +44,7 @@ async function respondCancel(wait: QuestionWait): Promise<void> {
 }
 
 export function PlanReviewCard({
-  matched, directory, load, select, t, useProjection, locked = false,
+  matched, directory, load, select, t, useProjection, locked = false, resolveInteractionOperations,
 }: PlanReviewCardProps) {
   const review = useMemo(
     () => planReviewOf(matched.payload.questions as Parameters<typeof planReviewOf>[0]),
@@ -138,6 +140,7 @@ export function PlanReviewCard({
                 select={select}
                 t={t}
                 useProjection={useProjection}
+                {...resolveInteractionOperations === undefined ? {} : { resolveInteractionOperations }}
                 draft={execution}
                 onDraftChange={setExecution}
                 embedded

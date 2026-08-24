@@ -16,9 +16,9 @@ DeepSeek Harness 的纯客户端插件：用按档位后缀分组的 Picker 替�
 
 `kimi-k3-max` 这类产品名不剥。codex / cursor / ollama 会在发 wire 前剥后缀并覆盖 `contextWindow`，让 DSH 更早压缩。Grok 目录也可以用同一套 id，本 Picker 仍按 base 分组。
 
-面板行：**模型**（家族 + 本地搜索）/ **推理等级** / **上下文**（兄弟档；base 标「标准」）/ **Fast**（有 `-fast` 兄弟才出现）/ **思考**（仅真有开关兄弟）。提交 `{ provider, model, reasoningEffort }`，走官方 `session.selectModel` 目录。
+面板行：**模型**（家族 + 本地搜索）/ **推理等级** / **上下文**（兄弟档；base 能确定窗口时直接显示 272K 等容量，否则显示「标准」）/ **Fast**（有 `-fast` 兄弟才出现）/ **思考**（仅真有开关兄弟）。提交 `{ provider, model, reasoningEffort }`，走官方 `session.selectModel` 目录。
 
-窄屏底部弹层，宽屏贴触发器。菜单 portal 抬高 z-index，躲开 rc.2 Plan chip。
+窄屏底部弹层，宽屏贴触发器。portal 菜单通过 capture 阶段的外部 `pointerdown` 关闭；可选的 DSH Mobile Interaction Operations 服务存在时，同时注册为 popup surface。
 
 ## 计划审查
 

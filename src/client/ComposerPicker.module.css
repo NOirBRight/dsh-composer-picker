@@ -81,7 +81,7 @@
   width: max-content;
   min-width: min(240px, calc(100vw - 32px));
   max-width: min(420px, calc(100vw - 32px));
-  max-height: min(360px, calc(100vh - 96px));
+  max-height: min(360px, 56dvh);
   overflow: hidden;
   padding: 4px;
   border: 1px solid var(--dsw-alias-border-inverted);
@@ -94,21 +94,19 @@
 }
 
 .paneHeader {
-  position: sticky;
-  top: 0;
-  z-index: 1;
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) 28px;
+  grid-template-columns: 32px minmax(0, 1fr) 32px;
   align-items: center;
   flex: 0 0 auto;
+  gap: 8px;
   min-height: 40px;
   padding: 2px 4px;
-  background: var(--dsw-specific-menu);
 }
 
 .paneHeader .headerButton {
-  width: 28px;
-  min-width: 28px;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
   padding: 0;
   color: var(--dsw-alias-label-secondary);
 }
@@ -125,8 +123,14 @@
 }
 
 .headerSearch {
+  box-sizing: border-box;
   width: 100%;
   min-width: 0;
+}
+
+.list {
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .status,
@@ -167,7 +171,6 @@
 
 .groups {
   min-height: 0;
-  overflow-y: auto;
 }
 
 .group + .group {

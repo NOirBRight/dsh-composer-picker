@@ -4,6 +4,7 @@
 import type { ModelSelection } from '@deepseek-ai/dsh-api-remotes/client';
 import type { CatalogGroupView } from '../family.ts';
 import type { PickerKey } from './locales.ts';
+import { type PickerInteractionOperations } from './popup-dismissal.ts';
 export interface PickerDirectorySnapshot {
     current: ModelSelection | null;
     groups: readonly CatalogGroupView[];
@@ -40,6 +41,7 @@ export interface ComposerPickerProps {
     externalTargetsLabel?: string;
     externalSelection?: string;
     onExternalTargetChange?: (id: string | undefined) => void;
+    resolveInteractionOperations?: () => PickerInteractionOperations | undefined;
 }
 export interface ModelPaneHeaderProps {
     title: string;
@@ -55,5 +57,5 @@ export interface ModelPaneHeaderProps {
     onQueryChange: (query: string) => void;
 }
 export declare function ModelPaneHeader({ title, backLabel, searchLabel, closeSearchLabel, searchable, searching, query, onBack, onStartSearch, onCloseSearch, onQueryChange, }: ModelPaneHeaderProps): import("react").JSX.Element;
-export declare function ComposerPicker({ locked, available, directory, load, select, t, useProjection, draft, onDraftChange, embedded, externalTargets, externalTargetsLabel, externalSelection, onExternalTargetChange, }: ComposerPickerProps): import("react").JSX.Element | null;
+export declare function ComposerPicker({ locked, available, directory, load, select, t, useProjection, draft, onDraftChange, embedded, externalTargets, externalTargetsLabel, externalSelection, onExternalTargetChange, resolveInteractionOperations, }: ComposerPickerProps): import("react").JSX.Element | null;
 //# sourceMappingURL=ComposerPicker.d.ts.map

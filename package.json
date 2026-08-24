@@ -1,7 +1,7 @@
 {
   "name": "dsh-composer-picker",
   "description": "Suffix-grouped composer model picker and plan-review execution model for DeepSeek Harness",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publishConfig": {
     "access": "public"
   },
