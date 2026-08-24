@@ -1,0 +1,4 @@
+# Register the composer picker Host plugin. The Web face loads from dsh.client.
+- insert:
+    - id: composer-picker
+      name: 'dsh-composer-picker'
