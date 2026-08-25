@@ -78,9 +78,7 @@
 .menu {
   display: flex;
   flex-direction: column;
-  width: max-content;
-  min-width: min(240px, calc(100vw - 32px));
-  max-width: min(420px, calc(100vw - 32px));
+  width: min(360px, calc(100vw - 32px));
   max-height: min(360px, 56dvh);
   overflow: hidden;
   padding: 4px;
@@ -111,6 +109,10 @@
   color: var(--dsw-alias-label-secondary);
 }
 
+.paneHeader .headerButton:last-child {
+  justify-self: end;
+}
+
 .paneTitle {
   min-width: 0;
   overflow: hidden;
@@ -122,10 +124,21 @@
   white-space: nowrap;
 }
 
+.searchSlot {
+  min-width: 0;
+  overflow: hidden;
+}
+
 .headerSearch {
   box-sizing: border-box;
+  display: flex;
   width: 100%;
+  max-width: 100%;
   min-width: 0;
+}
+
+.headerSearch input::-webkit-search-cancel-button {
+  display: none;
 }
 
 .list {

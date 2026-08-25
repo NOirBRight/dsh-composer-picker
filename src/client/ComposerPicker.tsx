@@ -113,15 +113,17 @@ export function ModelPaneHeader({
       />
       {searching
         ? (
-            <Input
-              className={css.headerSearch ?? ''}
-              type="search"
-              autoFocus
-              value={query}
-              placeholder={searchLabel}
-              aria-label={searchLabel}
-              onChange={event => { onQueryChange(event.currentTarget.value) }}
-            />
+            <div className={css.searchSlot}>
+              <Input
+                className={css.headerSearch ?? ''}
+                type="search"
+                autoFocus
+                value={query}
+                placeholder={searchLabel}
+                aria-label={searchLabel}
+                onChange={event => { onQueryChange(event.currentTarget.value) }}
+              />
+            </div>
           )
         : <div className={css.paneTitle}>{title}</div>}
       {searchable
