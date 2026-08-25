@@ -110,6 +110,13 @@ export function impliedStandardTokens(base: string): number | undefined {
   if (/^gpt-5\.6(?:-|$)/u.test(base)) return 272_000
 }
 
+/** Label a selected variant from catalog identity, never from stale session pressure. */
+export function contextLabelForMember(family: ModelFamily, member: FamilyMember): string {
+  const tokens = member.contextTokens
+    ?? (member.contextTier === null ? impliedStandardTokens(family.base) : undefined)
+  return contextTierLabel(member.contextTier, tokens)
+}
+
 function memberOf(model: CatalogModelView): FamilyMember {
   const parsed = parsePickerId(model.id)
   return {

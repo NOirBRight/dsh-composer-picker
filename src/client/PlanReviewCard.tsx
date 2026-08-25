@@ -1,14 +1,8 @@
-/**
- * Plan-review composer takeover: markdown body, planning → execution handoff,
- * Discuss / Keep planning / Approve. Approve selects first, then answers.
- */
-
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import type { ModelSelection } from '@deepseek-ai/dsh-api-remotes/client'
 import type { PendingWait } from '@deepseek-ai/dsh-client-runtime/client'
 import { Button, IconEditOutline16, MarkdownText } from '@deepseek-ai/dsh-client-ui-primitives'
 import { approvePlanReview, planReviewOf } from '../plan-review.ts'
-import { findFamily, findMember, groupFamilies } from '../family.ts'
 import { ComposerPicker, type PickerDirectoryStore } from './ComposerPicker.tsx'
 import type { PickerInteractionOperations } from './popup-dismissal.ts'
 import type { PickerKey } from './locales.ts'
@@ -18,6 +12,7 @@ type QuestionWait = PendingWait<'question'>
 
 export interface PlanReviewCardProps {
   matched: QuestionWait
+  available: boolean
   directory: PickerDirectoryStore
   load: () => void
   select: (selection: ModelSelection) => Promise<boolean>
@@ -27,7 +22,7 @@ export interface PlanReviewCardProps {
   resolveInteractionOperations?: () => PickerInteractionOperations | undefined
 }
 
-async function respondApprove(wait: QuestionWait, id: string, label: string): Promise<void> {
+async function respondAnswer(wait: QuestionWait, id: string, label: string): Promise<void> {
   const receipt = await wait.respond({
     ok: true,
     value: { sessionId: wait.sessionId, answer: { answers: [{ id, selected: [label] }] } },
@@ -44,43 +39,23 @@ async function respondCancel(wait: QuestionWait): Promise<void> {
 }
 
 export function PlanReviewCard({
-  matched, directory, load, select, t, useProjection, locked = false, resolveInteractionOperations,
+  matched, available, directory, load, select, t, useProjection, locked = false, resolveInteractionOperations,
 }: PlanReviewCardProps) {
   const review = useMemo(
     () => planReviewOf(matched.payload.questions as Parameters<typeof planReviewOf>[0]),
     [matched],
   )
-  const [planning, setPlanning] = useState<ModelSelection | null>(directory.getSnapshot().current)
-  const [execution, setExecution] = useState<ModelSelection | null>(directory.getSnapshot().current)
+  const snapshot = useSyncExternalStore(directory.subscribe, directory.getSnapshot)
+  const [execution, setExecution] = useState<ModelSelection | undefined>(snapshot.current ?? undefined)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [rev, setRev] = useState(0)
 
   useEffect(() => { load() }, [load])
-  useEffect(() => directory.subscribe(() => {
-    const current = directory.getSnapshot().current
-    setRev(value => value + 1)
-    if (current === null) return
-    setPlanning(prev => prev ?? current)
-    setExecution(prev => prev ?? current)
-  }), [directory])
+  useEffect(() => {
+    if (execution === undefined && snapshot.current !== null) setExecution(snapshot.current)
+  }, [execution, snapshot.current])
 
   if (review === undefined) return null
-
-  const snapshot = directory.getSnapshot()
-  void rev
-
-  const families = groupFamilies(snapshot.groups)
-  const planningFamily = planning === null ? undefined : findFamily(families, planning.provider, planning.model)
-  const planningMember = planningFamily === undefined || planning === null
-    ? undefined
-    : findMember(planningFamily, planning.model)
-  const planningLabel = planningFamily?.name ?? planningMember?.model.name ?? planning?.model ?? t('trigger.fallback')
-  const planningEffort = planning?.reasoningEffort
-    ?? planningMember?.model.reasoning?.defaultEffort
-  const planningEffortLabel = planningEffort === undefined
-    ? undefined
-    : planningMember?.model.reasoning?.efforts.find(level => level.id === planningEffort)?.name ?? planningEffort
 
   const settle = (send: () => Promise<void>): void => {
     setBusy(true)
@@ -92,21 +67,18 @@ export function PlanReviewCard({
   }
 
   const onApprove = (): void => {
-    if (execution === null) return
+    if (execution === undefined || !available) return
     settle(async () => {
-      const ok = await approvePlanReview({
+      const committed = await approvePlanReview({
         select,
         selection: execution,
-        answer: () => respondApprove(matched, review.id, review.approve.label),
+        answer: () => respondAnswer(matched, review.id, review.approve.label),
       })
-      if (!ok) {
-        const message = directory.getSnapshot().error ?? t('error.action', { message: 'select failed' })
-        throw new Error(message)
+      if (!committed) {
+        throw new Error(directory.getSnapshot().error ?? t('error.action', { message: 'select failed' }))
       }
     })
   }
-
-  const decline = review.decline
 
   return (
     <div className={css.frame} data-plan-review-key={matched.key}>
@@ -118,35 +90,21 @@ export function PlanReviewCard({
         <div className={css.body} data-plan-review-scroll>
           <MarkdownText text={review.plan} />
         </div>
-        <div className={css.handoff} aria-label={t('plan.handoff')}>
-          <div className={css.seat}>
-            <span className={css.seatLabel}>{t('plan.planning')}</span>
-            <div className={css.frozen}>
-              <span className={css.frozenName}>{planningLabel}</span>
-              {planningEffortLabel !== undefined && (
-                <span className={css.frozenEffort}>{planningEffortLabel}</span>
-              )}
-            </div>
-          </div>
-          <span className={css.arrow} aria-hidden="true">→</span>
-          <div className={css.seat}>
-            <span className={css.seatLabel}>{t('plan.execution')}</span>
-            {execution !== null && (
-              <ComposerPicker
-                locked={locked || busy}
-                available
-                directory={directory}
-                load={load}
-                select={select}
-                t={t}
-                useProjection={useProjection}
-                {...resolveInteractionOperations === undefined ? {} : { resolveInteractionOperations }}
-                draft={execution}
-                onDraftChange={setExecution}
-                embedded
-              />
-            )}
-          </div>
+        <div className={css.execution} aria-label={t('plan.execution')}>
+          <span className={css.executionLabel}>{t('plan.execution')}</span>
+          <ComposerPicker
+            locked={locked || busy}
+            available={available}
+            directory={directory}
+            load={load}
+            select={select}
+            t={t}
+            useProjection={useProjection}
+            {...resolveInteractionOperations === undefined ? {} : { resolveInteractionOperations }}
+            {...execution === undefined ? {} : { draft: execution }}
+            onDraftChange={setExecution}
+            embedded
+          />
         </div>
         <div className={css.footer}>
           <div className={css.feedback} role="status">{error}</div>
@@ -160,19 +118,17 @@ export function PlanReviewCard({
             >
               {t('plan.discuss')}
             </Button>
-            {decline !== undefined && (
+            {review.decline !== undefined && (
               <Button
                 variant="ghost"
                 disabled={busy}
-                {...decline.description === undefined ? {} : { title: decline.description }}
-                onClick={() => {
-                  settle(() => respondApprove(matched, review.id, decline.label))
-                }}
+                {...review.decline.description === undefined ? {} : { title: review.decline.description }}
+                onClick={() => { settle(() => respondAnswer(matched, review.id, review.decline!.label)) }}
               >
                 {t('plan.keep')}
               </Button>
             )}
-            <Button disabled={busy || execution === null} onClick={onApprove}>
+            <Button disabled={busy || !available || execution === undefined} onClick={onApprove}>
               {t('plan.approve')}
             </Button>
           </div>

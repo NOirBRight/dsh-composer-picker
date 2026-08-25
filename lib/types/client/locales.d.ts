@@ -27,8 +27,6 @@ export declare const zh: {
     'empty.efforts': string;
     'plan.kicker': string;
     'plan.header': string;
-    'plan.handoff': string;
-    'plan.planning': string;
     'plan.execution': string;
     'plan.approve': string;
     'plan.keep': string;
@@ -63,8 +61,6 @@ export declare const en: {
     'empty.efforts': string;
     'plan.kicker': string;
     'plan.header': string;
-    'plan.handoff': string;
-    'plan.planning': string;
     'plan.execution': string;
     'plan.approve': string;
     'plan.keep': string;

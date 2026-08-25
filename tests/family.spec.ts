@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  contextLabelForMember,
   contextTiers,
   familyHasContextChoices,
   familyHasFast,
@@ -141,6 +142,15 @@ describe('groupFamilies', () => {
     const kimi = families.find(family => family.base === 'kimi-k3-max')!
     expect(familyHasFast(kimi)).toBe(false)
     expect(familyHasContextChoices(kimi)).toBe(false)
+  })
+
+  it('derives the selected context label from the model identity, not stale session pressure', () => {
+    const sol = families.find(family => family.base === 'gpt-5.6-sol')!
+    const standard = sol.members.find(member => member.model.id === 'gpt-5.6-sol')!
+    const large = sol.members.find(member => member.model.id === 'gpt-5.6-sol-1m')!
+
+    expect(contextLabelForMember(sol, standard)).toBe('272K')
+    expect(contextLabelForMember(sol, large)).toBe('1M')
   })
 
   it('picks Fast / context siblings while keeping the other axis', () => {

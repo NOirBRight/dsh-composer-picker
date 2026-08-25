@@ -57,5 +57,5 @@ export interface ModelPaneHeaderProps {
     onQueryChange: (query: string) => void;
 }
 export declare function ModelPaneHeader({ title, backLabel, searchLabel, closeSearchLabel, searchable, searching, query, onBack, onStartSearch, onCloseSearch, onQueryChange, }: ModelPaneHeaderProps): import("react").JSX.Element;
-export declare function ComposerPicker({ locked, available, directory, load, select, t, useProjection, draft, onDraftChange, embedded, externalTargets, externalTargetsLabel, externalSelection, onExternalTargetChange, resolveInteractionOperations, }: ComposerPickerProps): import("react").JSX.Element | null;
+export declare function ComposerPicker({ locked, available, directory, load, select, t, draft, onDraftChange, embedded, externalTargets, externalTargetsLabel, externalSelection, onExternalTargetChange, resolveInteractionOperations, }: ComposerPickerProps): import("react").JSX.Element | null;
 //# sourceMappingURL=ComposerPicker.d.ts.map

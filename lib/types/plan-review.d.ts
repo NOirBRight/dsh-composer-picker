@@ -1,14 +1,8 @@
-/**
- * Plan-review takeover selector and approve sequencing. Copied shape of the
- * official plan-review narrow — not a runtime import of ui-user-questions.
- */
-import type { ModelSelectionView } from './family.ts';
-/** One option the asker offered on the reviewed question. */
+import type { ModelSelection } from '@deepseek-ai/dsh-api-remotes/client';
 export interface PlanReviewOption {
     label: string;
     description?: string;
 }
-/** Narrowed plan-review request the card can answer. */
 export interface PlanReview {
     id: string;
     question: string;
@@ -39,17 +33,11 @@ interface ComposerOwner {
         payload?: unknown;
     }[];
 }
-/** Narrow a question batch to a renderable plan review. */
 export declare function planReviewOf(questions: readonly QuestionItem[]): PlanReview | undefined;
-/** Chain selector: claim only a pending plan-review question wait. */
 export declare function selectPlanReview(owner: ComposerOwner): QuestionWaitLike | null;
-/**
- * Approve order: select the execution model first; only then answer.
- * A failed select must not answer.
- */
 export declare function approvePlanReview(args: {
-    select: (selection: ModelSelectionView) => Promise<boolean>;
-    selection: ModelSelectionView;
+    select: (selection: ModelSelection) => Promise<boolean>;
+    selection: ModelSelection;
     answer: () => Promise<void>;
 }): Promise<boolean>;
 export {};

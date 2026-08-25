@@ -1,17 +1,10 @@
-/**
- * Plan-review takeover selector and approve sequencing. Copied shape of the
- * official plan-review narrow — not a runtime import of ui-user-questions.
- */
+import type { ModelSelection } from '@deepseek-ai/dsh-api-remotes/client'
 
-import type { ModelSelectionView } from './family.ts'
-
-/** One option the asker offered on the reviewed question. */
 export interface PlanReviewOption {
   label: string
   description?: string
 }
 
-/** Narrowed plan-review request the card can answer. */
 export interface PlanReview {
   id: string
   question: string
@@ -26,7 +19,7 @@ interface QuestionItem {
   detail?: string
   multiSelect?: boolean
   options?: readonly PlanReviewOption[]
-  intent?: { kind: string, approve?: string }
+  intent?: { kind: string; approve?: string }
 }
 
 interface QuestionWaitLike {
@@ -35,17 +28,15 @@ interface QuestionWaitLike {
 }
 
 interface ComposerOwner {
-  interactions: readonly { kind: string, payload?: unknown }[]
+  interactions: readonly { kind: string; payload?: unknown }[]
 }
 
-/** Narrow a question batch to a renderable plan review. */
 export function planReviewOf(questions: readonly QuestionItem[]): PlanReview | undefined {
   if (questions.length !== 1) return undefined
   const question = questions[0]
   if (question === undefined) return undefined
   const intent = question.intent
-  if (intent?.kind !== 'plan-review' || question.detail === undefined) return undefined
-  if (question.multiSelect === true) return undefined
+  if (intent?.kind !== 'plan-review' || question.detail === undefined || question.multiSelect === true) return undefined
   const options = question.options ?? []
   if (options.length > 2) return undefined
   const approve = options.find(option => option.label === intent.approve)
@@ -60,31 +51,25 @@ export function planReviewOf(questions: readonly QuestionItem[]): PlanReview | u
   }
 }
 
-function isQuestionWait(value: { kind: string, payload?: unknown }): value is QuestionWaitLike {
+function isQuestionWait(value: { kind: string; payload?: unknown }): value is QuestionWaitLike {
   if (value.kind !== 'question' || value.payload === undefined || typeof value.payload !== 'object' || value.payload === null) {
     return false
   }
   return Array.isArray((value.payload as { questions?: unknown }).questions)
 }
 
-/** Chain selector: claim only a pending plan-review question wait. */
 export function selectPlanReview(owner: ComposerOwner): QuestionWaitLike | null {
   const wait = owner.interactions.find(isQuestionWait)
   if (wait === undefined) return null
   return planReviewOf(wait.payload.questions) === undefined ? null : wait
 }
 
-/**
- * Approve order: select the execution model first; only then answer.
- * A failed select must not answer.
- */
 export async function approvePlanReview(args: {
-  select: (selection: ModelSelectionView) => Promise<boolean>
-  selection: ModelSelectionView
+  select: (selection: ModelSelection) => Promise<boolean>
+  selection: ModelSelection
   answer: () => Promise<void>
 }): Promise<boolean> {
-  const ok = await args.select(args.selection)
-  if (!ok) return false
+  if (!await args.select(args.selection)) return false
   await args.answer()
   return true
 }

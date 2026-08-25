@@ -1,5 +1,5 @@
 /**
- * Browser half: composer model seat + plan-review takeover.
+ * Browser half: composer model seat + optional execution-model adapters.
  */
 import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client';
 import { type PickerKey } from './locales.ts';

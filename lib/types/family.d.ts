@@ -59,6 +59,8 @@ export declare function contextTierLabel(tier: string | null, tokens?: number): 
 export declare function formatWindow(tokens: number): string;
 /** Standard-row window when the Host directory omits contextWindow. */
 export declare function impliedStandardTokens(base: string): number | undefined;
+/** Label a selected variant from catalog identity, never from stale session pressure. */
+export declare function contextLabelForMember(family: ModelFamily, member: FamilyMember): string;
 /** Group directory rows by provider + peeled base. */
 export declare function groupFamilies(groups: readonly CatalogGroupView[]): ModelFamily[];
 /** Locate the family that owns a provider/model pair. */

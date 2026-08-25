@@ -4,7 +4,7 @@
 
 import type { Context } from '@deepseek-ai/cordis'
 
-export { parsePickerId, groupFamilies, selectPlanReview, planReviewOf, approvePlanReview } from './public.ts'
+export { parsePickerId, groupFamilies } from './public.ts'
 
 export const name = 'dsh-composer-picker'
 export const inject: string[] = []

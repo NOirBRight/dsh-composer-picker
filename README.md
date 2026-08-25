@@ -22,11 +22,11 @@ Narrow screens open a bottom sheet. Wide screens pin the menu to the trigger. Th
 
 ## Plan review
 
-A second `conversation.composer` chain entry at priority `-5` (between subagent `-10` and QuestionComposer `0`) claims only `intent.kind === 'plan-review'`. Generic questions, approvals, and subagent composers stay official.
+When installed alone, this plugin owns a complete Plan Review card through the official `conversation.composer` chain at priority `-5`. The card shows the Plan and an editable execution-model picker; it does not depend on a model-specific official Question child slot.
 
-The card shows the plan markdown, a read-only planning model, and an editable execution picker. **Approve** calls `select(execution model)` first; only a successful select then answers the question. A failed select does not answer.
+**Approve** commits `select(execution model)` first. Only a successful selection answers the pending review; a failed selection displays the error and leaves the review pending for retry.
 
-When `dsh-external-agents` is also installed, its priority `-6` Plan router owns the top-level card; this plugin contributes one unified execution picker through the optional `external-agents.plan-review.continue-in-dsh` child slot; DSH models and Codex/Claude/Cursor/Antigravity Workers appear in the same model list. Removing external-agents automatically restores this plugin's priority `-5` fallback card.
+When `dsh-external-agents` is installed, its higher-priority routing card wins the composer chain. This plugin contributes only its unified picker Adapter through the plugin-owned `external-agents.plan-review.continue-in-dsh` slot; DSH models and Codex/Claude/Cursor/Antigravity Workers appear in the same model list.
 
 ## Install (lab)
 

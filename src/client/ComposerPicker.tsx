@@ -15,20 +15,20 @@ import {
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { CatalogGroupView, FamilyMember, ModelFamily } from '../family.ts'
 import {
-  contextTierLabel,
+  contextLabelForMember,
   contextTiers,
   familyHasContextChoices,
   familyHasFast,
   filterFamilies,
   findFamily,
   findMember,
-  impliedStandardTokens,
   groupFamilies,
   pickVariant,
   sectionFamilies,
   selectionOf,
   thinkingSiblings,
 } from '../family.ts'
+import { beginSelection } from '../selection-feedback.ts'
 import type { PickerKey } from './locales.ts'
 import { installPickerDismissal, type PickerInteractionOperations } from './popup-dismissal.ts'
 import css from './ComposerPicker.module.css'
@@ -72,12 +72,6 @@ export interface ComposerPickerProps {
 }
 
 type Pane = 'root' | 'model' | 'effort' | 'context' | 'fast' | 'thinking'
-
-function asContextWindow(value: unknown): number | undefined {
-  if (typeof value !== 'object' || value === null) return undefined
-  const windowSize = (value as { contextWindow?: unknown }).contextWindow
-  return typeof windowSize === 'number' && Number.isFinite(windowSize) ? windowSize : undefined
-}
 
 function classNames(...parts: Array<string | false | undefined>): string {
   return parts.filter((part): part is string => typeof part === 'string' && part.length > 0).join(' ')
@@ -143,12 +137,11 @@ export function ModelPaneHeader({
 }
 
 export function ComposerPicker({
-  locked, available, directory, load, select, t, useProjection, draft, onDraftChange, embedded,
+  locked, available, directory, load, select, t, draft, onDraftChange, embedded,
   externalTargets = [], externalTargetsLabel = 'External Agents', externalSelection, onExternalTargetChange,
   resolveInteractionOperations,
 }: ComposerPickerProps) {
   const state = useSyncExternalStore(fn => directory.subscribe(fn), () => directory.getSnapshot())
-  const pressureWindow = asContextWindow(useProjection?.('contextPressure'))
   const [open, setOpen] = useState(false)
   const [pane, setPane] = useState<Pane>('root')
   const [searching, setSearching] = useState(false)
@@ -176,12 +169,9 @@ export function ComposerPicker({
     : effectiveEffort === undefined
       ? t('effort.providerDefault')
       : reasoning.efforts.find(level => level.id === effectiveEffort)?.name ?? effectiveEffort
-  const standardTokens = member?.contextTier === null
-    ? (pressureWindow ?? (family === undefined ? undefined : impliedStandardTokens(family.base)))
-    : (family === undefined ? undefined : impliedStandardTokens(family.base))
-  const contextLabel = member === undefined
+  const contextLabel = family === undefined || member === undefined
     ? undefined
-    : contextTierLabel(member.contextTier, member.contextTokens ?? standardTokens)
+    : contextLabelForMember(family, member)
   const thinkingPair = family !== undefined && member !== undefined ? thinkingSiblings(family, member) : null
   const visibleFamilies = useMemo(() => filterFamilies(families, query), [families, query])
   const visibleExternalTargets = useMemo(() => {
@@ -267,10 +257,7 @@ export function ComposerPicker({
   }
 
   const settleSelection = (accepted: boolean): void => {
-    if (accepted) {
-      returnToRoot()
-      return
-    }
+    if (accepted) return
     const message = directory.getSnapshot().error
     if (message !== null) {
       toastSeq.current += 1
@@ -291,7 +278,7 @@ export function ComposerPicker({
       return
     }
     lastActionRef.current = 'select'
-    void select(next).then(settleSelection)
+    void beginSelection(() => select(next), returnToRoot, settleSelection)
   }
 
   const chooseMember = (nextFamily: ModelFamily, next: FamilyMember, effort?: string): void => {
@@ -512,7 +499,7 @@ export function ComposerPicker({
       )}
 
       {pane === 'context' && family !== undefined && member !== undefined && (
-        contextTiers(family, standardTokens).map(row => {
+        contextTiers(family).map(row => {
           const selected = member.contextTier === row.tier
           return (
             <button

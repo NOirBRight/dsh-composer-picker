@@ -22,11 +22,11 @@ DeepSeek Harness 的纯客户端插件：用按档位后缀分组的 Picker 替�
 
 ## 计划审查
 
-第二条 `conversation.composer` 链，priority `-5`（子代理 `-10` 与 QuestionComposer `0` 之间），只匹配 `intent.kind === 'plan-review'`。普通提问、approval、子代理 composer 仍走官方。
+单独安装时，本插件通过官方 `conversation.composer` chain 以优先级 `-5` 提供完整的 Plan Review 卡片。卡片展示 Plan 和可编辑的执行模型 Picker，不依赖官方 Question 包中的模型专用 child slot。
 
-卡片展示计划 markdown、只读规划模型、可改执行模型。**批准**先 `select(执行模型)`，成功后再 answer；select 失败不 answer。
+点击**批准**会先提交 `select(执行模型)`。只有模型选择成功后才 answer 待处理审查；select 失败时显示错误并保持待处理，允许重试。
 
-与 `dsh-external-agents` 双装时，它的 priority `-6` Plan 路由卡先接管；本插件通过可选 `external-agents.plan-review.continue-in-dsh` child slot 贡献一个统一执行 Picker；DSH 模型和 Codex/Claude/Cursor/Antigravity Worker 出现在同一个模型列表里。external-agents 卸载或未安装时，本插件的 priority `-5` 卡自动恢复。
+与 `dsh-external-agents` 双装时，其更高优先级的路由卡片会赢得 composer chain。本插件只通过插件自有的 `external-agents.plan-review.continue-in-dsh` slot 提供统一 Picker Adapter；DSH 模型和 Codex/Claude/Cursor/Antigravity Worker 出现在同一模型列表里。
 
 ## 安装（lab）
 

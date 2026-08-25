@@ -1,11 +1,10 @@
 /**
- * Browser half: composer model seat + plan-review takeover.
+ * Browser half: composer model seat + optional execution-model adapters.
  */
 
 import type { ModelSelection } from '@deepseek-ai/dsh-api-remotes/client'
 import type { ClientContext, PendingWait } from '@deepseek-ai/dsh-client-runtime/client'
 import type { ComposerChainProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
-import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type {} from '@deepseek-ai/dsh-client-ui-model-selection/client'
 import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
@@ -86,32 +85,6 @@ export function apply(ctx: ClientContext): void {
       },
     }, ModelSeat))
 
-    function PlanSeat(
-      props: PropsRuntime<'conversation.composer'>
-        & { matched: ReturnType<typeof selectPlanReview> }
-        & PropsLocale<'composer-picker'>,
-    ) {
-      if (props.matched === null) return null
-      const directory = models.directoryFor(props.sessionId)
-      const available = sessions.subagentAddress(props.sessionId) === undefined
-      return (
-        <PlanReviewCard
-          key={(props.matched as PendingWait<'question'>).key}
-          matched={props.matched as PendingWait<'question'>}
-          directory={directory.store}
-          load={() => {
-            if (available) directory.load().catch(() => { /* surfaced on the store */ })
-          }}
-          select={(selection: ModelSelection) => available
-            ? directory.select(selection).then(() => true, () => false)
-            : Promise.resolve(false)}
-          t={props.t}
-          useProjection={props.useProjection}
-          resolveInteractionOperations={resolveInteractionOperations}
-        />
-      )
-    }
-
     scope.slots.inject(CONTINUE_IN_DSH_SLOT, () => scope.slots.register({
       name: CONTINUE_IN_DSH_SLOT,
       locale: NS,
@@ -131,6 +104,33 @@ export function apply(ctx: ClientContext): void {
         }
       },
     }, ContinueInDshAdapter))
+
+    function PlanSeat(
+      props: PropsRuntime<'conversation.composer'>
+        & { matched: ReturnType<typeof selectPlanReview> }
+        & PropsLocale<'composer-picker'>,
+    ) {
+      if (props.matched === null) return null
+      const directory = models.directoryFor(props.sessionId)
+      const available = sessions.subagentAddress(props.sessionId) === undefined
+      return (
+        <PlanReviewCard
+          key={(props.matched as PendingWait<'question'>).key}
+          matched={props.matched as PendingWait<'question'>}
+          available={available}
+          directory={directory.store}
+          load={() => {
+            if (available) directory.load().catch(() => { /* surfaced on the store */ })
+          }}
+          select={(selection: ModelSelection) => available
+            ? directory.select(selection).then(() => true, () => false)
+            : Promise.resolve(false)}
+          t={props.t}
+          useProjection={props.useProjection}
+          resolveInteractionOperations={resolveInteractionOperations}
+        />
+      )
+    }
 
     scope.slots.inject('conversation.composer', () => scope.slots.register({
       name: 'conversation.composer',
