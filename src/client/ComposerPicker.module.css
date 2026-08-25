@@ -76,9 +76,10 @@
 }
 
 .menu {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  width: min(360px, calc(100vw - 32px));
+  width: min(320px, calc(100vw - 32px));
   max-height: min(360px, 56dvh);
   overflow: hidden;
   padding: 4px;
